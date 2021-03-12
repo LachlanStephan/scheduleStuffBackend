@@ -45,7 +45,7 @@ app.get("/schedule", (req, res) => {
 // Post register details
 app.post("/regUser", jsonParser, (req, res) => {
   console.log("got body", req.body);
-  res.sendStatus(200);
+  // res.sendStatus(200);
   dbFunc.regUser(req, res);
 });
 

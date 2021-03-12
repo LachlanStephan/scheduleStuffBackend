@@ -42,7 +42,7 @@ const getSchedule = (req, res) => {
 ////////////////////////////////////////////////////////////
 // Func to register user details
 ////////////////////////////////////////////////////////////
-const regUser = (req, res) => {
+const regUser = (req, res, next) => {
   // set form data that will be inserted
   let values = [
     req.body.fName,
@@ -57,28 +57,27 @@ const regUser = (req, res) => {
   // For checking the email exists query
   let checkEmail = req.body.email;
 
-  // Checks if email is in use
+  // SQL to check if email is in use
   let check_user_sql = "SELECT * FROM USERS WHERE email = (?)";
 
-  // Query to check the email (exists or not)
+  // Run email check query
   pool.query(check_user_sql, checkEmail, (err, rows) => {
     if (err) {
       console.log(err);
-      res.status(400).send();
+      res.status(400).send(err);
     }
     if (rows.length > 0) {
       console.log("email in use");
-      res.status(403).send();
-      pool.release;
+      res.status(409).send();
     } else {
       // if new user ----> add new user
       pool.query(sql, [values], (err, rows) => {
         if (err) {
-          res.status(400).send();
+          res.status(400).send(err);
           console.log(err);
         } else {
           console.log("success");
-          res.status(201).send();
+          res.status(201).send("new user added");
         }
       });
     }
