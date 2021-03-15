@@ -1,6 +1,6 @@
 const mysql = require("mysql");
-const { request, rawListeners } = require("../server");
 require("dotenv").config({ path: "./config/.env" });
+
 ////////////////////////////////////////////////////////////
 // DB connection
 ////////////////////////////////////////////////////////////
@@ -15,26 +15,32 @@ const pool = mysql.createPool({
 ////////////////////////////////////////////////////////////
 // Test func for * users
 ////////////////////////////////////////////////////////////
-const getUsers = (res) => {
-  let sql = "SELECT * FROM Users";
-  pool.query(sql, (err, results) => {
-    if (!err) {
-      res.send(results);
-    } else {
-      res.status(400);
-    }
-  });
-};
+// const getUsers = (res) => {
+//   let sql = "SELECT * FROM Users";
+//   pool.query(sql, (err, results) => {
+//     if (!err) {
+//       res.send(results);
+//     } else {
+//       res.status(400);
+//     }
+//   });
+// };
+
 ////////////////////////////////////////////////////////////
 // Func to retrieve schedule for users
 ////////////////////////////////////////////////////////////
-const getSchedule = (req, res) => {
-  let sql = "SELECT * FROM Schedule";
+const getSchedule = (userID, cb) => {
+  // Select query
+  let sql =
+    "SELECT * FROM userEvent RIGHT JOIN Schedule ON userEvent.event_ID = Schedule.event_ID WHERE userEvent.users_ID = " +
+    userID;
   pool.query(sql, (err, rows) => {
-    if (!err) {
-      res.status(201).send(rows);
+    // In case of error
+    if (err) {
+      cb(0);
     } else {
-      res.send(204);
+      // If correct ---> send rows in callback to the route
+      cb(rows);
     }
   });
 };
@@ -42,7 +48,7 @@ const getSchedule = (req, res) => {
 ////////////////////////////////////////////////////////////
 // Func to register user details
 ////////////////////////////////////////////////////////////
-const regUser = (req, res, next) => {
+const regUser = (req, cb) => {
   // set form data that will be inserted
   let values = [
     req.body.fName,
@@ -62,22 +68,22 @@ const regUser = (req, res, next) => {
 
   // Run email check query
   pool.query(check_user_sql, checkEmail, (err, rows) => {
+    // In case of error
     if (err) {
-      console.log(err);
-      res.status(400).send(err);
+      cb(0);
     }
+    // check if the email already exists
     if (rows.length > 0) {
-      console.log("email in use");
-      res.status(409).send();
+      cb(409);
     } else {
       // if new user ----> add new user
       pool.query(sql, [values], (err, rows) => {
+        // Check for error
         if (err) {
-          res.status(400).send(err);
           console.log(err);
         } else {
-          console.log("success");
-          res.status(201).send("new user added");
+          // If correct ---> parse 201
+          cb(201);
         }
       });
     }
@@ -87,19 +93,24 @@ const regUser = (req, res, next) => {
 ////////////////////////////////////////////////////////////
 // Func to check the login
 ////////////////////////////////////////////////////////////
-const login = (req, res) => {
+const login = (req, cb) => {
   // set login data
   let values = [req.body.email, req.body.password];
   let sql = "SELECT * FROM Users where email = ? AND password = ?";
   // run the query
-  pool.query(sql, [values], (err, rows) => {
+  pool.query(sql, values, (err, rows) => {
+    // In case of error
+    if (err) {
+      console.log(err);
+    }
+    // if the login does not exist
+    if (rows.length === 0) {
+      cb(0);
+    }
     if (rows.length > 0) {
-      // set id and isloggedin boolean in session
-      req.session.isloggedin = true;
-      req.session.userID = userID;
-      res.statusCode(200);
-    } else {
-      res.statusCode(401);
+      // if everything is correct -----> send rows
+      console.log(rows.users_ID);
+      cb(rows[0].users_ID);
     }
   });
 };
@@ -108,7 +119,6 @@ const login = (req, res) => {
 // Exports all func
 ////////////////////////////////////////////////////////////
 module.exports = {
-  getUsers,
   getSchedule,
   regUser,
   login,
