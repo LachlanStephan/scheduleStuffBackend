@@ -53,22 +53,17 @@ app.use(limiter);
 // To parse json data
 let jsonParser = bodyParser.json();
 
-// Test home route
-app.get("/", (req, res) => {
-  res.send("Home");
-});
-
-// Test route for all users`
-app.get("/users", (req, res) => {
-  dbFunc.getUsers(res);
-});
-
 // Retrieve schedule for user
 app.get("/schedule", (req, res) => {
   // Assign the user ID
+  let isLoggedin = req.session.isLoggedin;
   let users_ID = req.session.users_ID;
+  console.log(users_ID);
   // Parse userID to query
   dbFunc.getSchedule(users_ID, (rows) => {
+    if ((isLoggedin = false)) {
+      res.status(401).send();
+    }
     // Connected but no content
     if (rows === 0) {
       res.status(204).send();
@@ -80,19 +75,37 @@ app.get("/schedule", (req, res) => {
   });
 });
 
+// Post user schedule
+app.post("/addSchedule", jsonParser, (req, res) => {
+  console.log(req.body);
+  let users_ID = req.session.users_ID;
+  console.log(users_ID);
+  dbFunc.addSchedule(req, users_ID, (cb) => {
+    if (cb === 0) {
+      res.status(400).send();
+    }
+    if (cb === 201) {
+      res.status(201).send();
+    }
+  });
+});
+
 // Post register details
 app.post("/regUser", jsonParser, (req, res) => {
   console.log("got body", req.body);
+  let users_ID = req.session.users_ID;
   // Parse the req and callback
   dbFunc.regUser(req, (userCheck) => {
     // If email exists send 409
     if (userCheck === 409) {
       res.status(409).send();
     }
-    // If correct ---> send 201
+    // If correct ---> send 201 && set session
     if (userCheck === 201) {
       res.status(201).send("new user added");
-      console.log("success");
+      req.session.isLoggedin = true;
+      req.session.users_ID = users_ID;
+      console.log("success", users_ID);
     } else {
       console.log("error");
     }
@@ -112,7 +125,21 @@ app.post("/login", jsonParser, (req, res) => {
       req.session.isLoggedin = true;
       req.session.users_ID = users_ID;
       res.status(200).send("session set and user logged in");
-      console.log("success");
+      console.log("success", users_ID, req.session);
+    }
+  });
+});
+
+// Users to update their names
+app.patch("/updateName", jsonParser, (req, res) => {
+  console.log("got body", req.body);
+  let userID = req.session.users_ID;
+  dbFunc.updateName(req, userID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    }
+    if (cb === 201) {
+      res.status(201).send();
     }
   });
 });

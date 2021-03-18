@@ -13,26 +13,12 @@ const pool = mysql.createPool({
 });
 
 ////////////////////////////////////////////////////////////
-// Test func for * users
-////////////////////////////////////////////////////////////
-// const getUsers = (res) => {
-//   let sql = "SELECT * FROM Users";
-//   pool.query(sql, (err, results) => {
-//     if (!err) {
-//       res.send(results);
-//     } else {
-//       res.status(400);
-//     }
-//   });
-// };
-
-////////////////////////////////////////////////////////////
 // Func to retrieve schedule for users
 ////////////////////////////////////////////////////////////
 const getSchedule = (userID, cb) => {
   // Select query
   let sql =
-    "SELECT * FROM userEvent RIGHT JOIN Schedule ON userEvent.event_ID = Schedule.event_ID WHERE userEvent.users_ID = " +
+    "SELECT * FROM userEvent INNER JOIN Schedule ON userEvent.event_ID = Schedule.event_ID WHERE userEvent.users_ID = " +
     userID;
   pool.query(sql, (err, rows) => {
     // In case of error
@@ -44,6 +30,80 @@ const getSchedule = (userID, cb) => {
     }
   });
 };
+////////////////////////////////////////////////////////////
+// Func to add a users schedule
+////////////////////////////////////////////////////////////
+const addSchedule = (req, users_ID, cb) => {
+  let values = [
+    req.body.startDate,
+    req.body.endDate,
+    req.body.startTime,
+    req.body.endTime,
+    req.body.eventTitle,
+    req.body.eventDesc,
+  ];
+  let sql =
+    "INSERT INTO Schedule (startDate, endDate, startTime, endTime, eventName, eventDescription) values (?)";
+
+  pool.getConnection(function (err, connection) {
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      } else {
+        connection.query(sql, [values], (err, rows) => {
+          if (err) {
+            cb(0);
+            return connection.rollback(function () {
+              throw err;
+            });
+          } else {
+            cb(201);
+            console.log("check", rows, rows.insertId); // Coming back undefined --> need this to work for 2nd part of transaction
+          }
+          let eventID = rows.insertId;
+          let userID = users_ID;
+          let values2 = [userID, eventID];
+          let sql2 = "INSERT INTO userEvent (users_ID, event_ID) VALUES (?)";
+          connection.query(sql2, [values2], (err) => {
+            if (err) {
+              cb(0);
+              return connection.rollback(function () {
+                throw err;
+              });
+            } else {
+              cb(201);
+            }
+          });
+        });
+        connection.commit(function (err) {
+          if (err) {
+            return connection.rollback(function () {
+              throw err;
+            });
+          }
+          console.log("success");
+        });
+      }
+    });
+  });
+};
+
+// pool.query("", (err, rows) => {
+//   if (err) {
+//     console.log(err, rows);
+//   }
+//   if (rows.startTime.length > 0 && rows.startDate.length > 0) {
+//     cb(409);
+//   } else {
+//     pool.query(sql, [values], (err, rows) => {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         cb(201);
+//       }
+//     });
+//   }
+// });
 
 ////////////////////////////////////////////////////////////
 // Func to register user details
@@ -116,9 +176,27 @@ const login = (req, cb) => {
 };
 
 ////////////////////////////////////////////////////////////
+// Update the users name
+////////////////////////////////////////////////////////////
+const updateName = (req, userID, cb) => {
+  let value = req.body.newName;
+  let sql = "UPDATE Users SET fName = (?) WHERE users_ID = " + userID;
+  pool.query(sql, value, (err, rows) => {
+    if (err) {
+      console.log(err);
+      cb(400);
+    } else {
+      cb(201);
+    }
+  });
+};
+
+////////////////////////////////////////////////////////////
 // Exports all func
 ////////////////////////////////////////////////////////////
 module.exports = {
+  updateName,
+  addSchedule,
   getSchedule,
   regUser,
   login,
