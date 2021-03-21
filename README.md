@@ -12,7 +12,7 @@ https://github.com/LachlanStephan/scheduleStuff
 
 ## Proj desc
 
-This project is to serve scheduleStuff -> it is currently serving a nextjs application and running off a mysql database
+This project is to serve scheduleStuff -> it is currently serving a nextjs client and connected to a mysql database
 
 ## Data dictionary
 
