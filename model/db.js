@@ -30,6 +30,7 @@ const getSchedule = (userID, cb) => {
     }
   });
 };
+
 ////////////////////////////////////////////////////////////
 // Func to add a users schedule
 ////////////////////////////////////////////////////////////
@@ -116,6 +117,7 @@ const regUser = (req, cb) => {
     req.body.email,
     req.body.password,
   ];
+  console.log("check2");
 
   // SQL that will be used for insert to DB
   let sql = "INSERT INTO Users (fName, lName, email, password) VALUES (?)";

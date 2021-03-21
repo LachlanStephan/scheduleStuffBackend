@@ -5,9 +5,11 @@ const cors = require("cors");
 const nodemon = require("nodemon");
 const bodyParser = require("body-parser");
 const dbFunc = require("./model/db");
+const apiFunc = require("./api/api");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
+const { body, check, validationResult } = require("express-validator");
 
 //////////////////////////////////////////
 // Notes to self
@@ -75,39 +77,60 @@ app.get("/schedule", (req, res) => {
   });
 });
 
-// Post user schedule
-app.post("/addSchedule", jsonParser, (req, res) => {
+// Post user schedule && call function to validate input
+app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
   console.log(req.body);
   let users_ID = req.session.users_ID;
   console.log(users_ID);
-  dbFunc.addSchedule(req, users_ID, (cb) => {
-    if (cb === 0) {
-      res.status(400).send();
+  // Call the fucntion to check for errors and return callback
+  apiFunc.valaddScheduleErr(req, (cb) => {
+    // If input is invalid
+    if (cb === 422) {
+      res.status(422).send();
     }
-    if (cb === 201) {
-      res.status(201).send();
+    // If input is valid --> continue to db function
+    if (cb === 200) {
+      dbFunc.addSchedule(req, users_ID, (cb) => {
+        if (cb === 0) {
+          res.status(400).send();
+        }
+        if (cb === 201) {
+          res.status(201).send();
+        }
+      });
     }
   });
 });
 
-// Post register details
-app.post("/regUser", jsonParser, (req, res) => {
+// Post register details && call function to validate input
+app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
   console.log("got body", req.body);
-  let users_ID = req.session.users_ID;
-  // Parse the req and callback
-  dbFunc.regUser(req, (userCheck) => {
-    // If email exists send 409
-    if (userCheck === 409) {
-      res.status(409).send();
+  // Call the fucntion to check for errors and return callback
+  apiFunc.valRegErr(req, (cb) => {
+    // If input is invalid
+    if (cb === 422) {
+      res.status(422).send();
     }
-    // If correct ---> send 201 && set session
-    if (userCheck === 201) {
-      res.status(201).send("new user added");
-      req.session.isLoggedin = true;
-      req.session.users_ID = users_ID;
-      console.log("success", users_ID);
-    } else {
-      console.log("error");
+    // If input is valid --> continue to db function
+    if (cb === 200) {
+      dbFunc.regUser(req, (userCheck) => {
+        if (userCheck === 0) {
+          console.log("failed");
+        }
+        // If email exists send 409
+        if (userCheck === 409) {
+          res.status(409).send();
+        }
+        // If correct ---> send 201 && set session
+        if (userCheck === 201) {
+          res.status(201).send("new user added");
+          // req.session.isLoggedin = true;
+          // req.session.users_ID = users_ID;
+          console.log("success");
+        } else {
+          console.log("error");
+        }
+      });
     }
   });
 });
@@ -126,6 +149,20 @@ app.post("/login", jsonParser, (req, res) => {
       req.session.users_ID = users_ID;
       res.status(200).send("session set and user logged in");
       console.log("success", users_ID, req.session);
+    }
+  });
+});
+
+// Allow users to logout
+app.post("/logout", (req, res) => {
+  console.log("check1");
+  req.session.destroy(function (err) {
+    if (err) {
+      res.status(400).send();
+      console.log("fail");
+    } else {
+      res.status(200).send();
+      console.log("logout");
     }
   });
 });
