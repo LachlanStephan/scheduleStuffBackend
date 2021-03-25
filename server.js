@@ -63,6 +63,10 @@ app.get("/schedule/:curDate", (req, res) => {
   // Log the route has been accessed
   // Assign the user ID
   let users_ID = req.session.users_ID;
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  // Assign the date for the DB func
   let curDate = req.params.curDate;
   console.log(users_ID, curDate);
   // Parse userID to query && date
@@ -74,6 +78,9 @@ app.get("/schedule/:curDate", (req, res) => {
     if (rows === 204) {
       res.status(204).send();
     } else {
+      log.info(
+        `User successfully retrieved schedule, userType: ${type}, ip address: ${ip}`
+      );
       // If correct ---> send rows(schedule)
       res.status(200).send(rows);
       console.log("success");
@@ -84,14 +91,19 @@ app.get("/schedule/:curDate", (req, res) => {
 // Post user schedule && call function to validate input
 app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
   console.log(req.body);
-  let users_ID = req.session.users_ID;
+  // Assign ip && userType for logging
+  let ip = req.ip;
   let type = req.session.userType;
+  // Assign userID
+  let users_ID = req.session.users_ID;
   console.log(users_ID);
   // Call the fucntion to check for errors and return callback
   apiFunc.valErrors(req, (cb) => {
     // If input is invalid
     if (cb === 422) {
-      log.info("failed to vailidate - addSchedule");
+      log.info(
+        `failed to vailidate - addSchedule, userType: ${type}, ip address: ${ip}`
+      );
       res.status(422).send();
     }
     // If input is valid --> continue to db function
@@ -101,7 +113,7 @@ app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
           res.status(400).send();
         }
         if (cb === 201) {
-          log.info("successfully inserted schedule", type);
+          log.info(`successfully inserted schedule", userType: ${type}`);
           res.status(201).send();
         }
       });
@@ -112,11 +124,16 @@ app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
 // Post register details && call function to validate input
 app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
   console.log("got body", req.body);
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
   // Call the fucntion to check for errors and return callback
   apiFunc.valErrors(req, (cb) => {
     // If input is invalid
     if (cb === 422) {
-      log.error("failed to validate - register");
+      log.error(
+        `failed to validate - register, userType: ${type}, ip address: ${ip}`
+      );
       res.status(422).send();
     }
     // If input is valid --> continue to db function
@@ -148,11 +165,15 @@ app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
 // Handle the login
 app.post("/login", jsonParser, apiFunc.valLog(), (req, res) => {
   console.log("got body", req.body);
+  // Assign ip && userType for logging
   let ip = req.ip;
-  log.info(`App visited, ip address: ${ip}`);
+  let type = req.session.userType;
+  log.info(`App visited, userType: ${type}, ip address: ${ip}`);
   apiFunc.valErrors(req, (cb) => {
     if (cb === 422) {
-      log.info("Failed validation - login");
+      log.info(
+        `Failed validation - login, userType: ${type}, ip address: ${ip} `
+      );
       res.status(422).send();
     }
     if (cb === 200) {
@@ -167,7 +188,7 @@ app.post("/login", jsonParser, apiFunc.valLog(), (req, res) => {
           req.session.userType = rows[0].userType;
           res.status(200).send("session set and user logged in");
           console.log("success", req.session.users_ID, req.session.userType);
-          log.info(`Successful login, userType: ${req.session.userType}`);
+          log.info(`Successful login, userType: ${type}, ip address: ${ip}`);
         }
       });
     }
@@ -191,17 +212,30 @@ app.post("/logout", (req, res) => {
 // Update the users name
 app.patch("/updateName", jsonParser, apiFunc.valUpdateName(), (req, res) => {
   console.log("got body", req.body);
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  // Assign userID and parse to DB func
   let userID = req.session.users_ID;
   apiFunc.valErrors(req, (cb) => {
+    // If validation fails
     if (cb === 422) {
+      log.info(
+        `Failed validation - updateName, userType: ${type}, ip address ${ip}`
+      );
       res.status(422).send();
     }
+    // If validation is successful
     if (cb === 200) {
+      // Call DB func
       dbFunc.updateName(req, userID, (cb) => {
         if (cb === 400) {
           res.status(400).send();
         }
         if (cb === 201) {
+          log.info(
+            `Success - update name, userType: ${type}, ip address: ${ip}`
+          );
           res.status(201).send();
         }
       });
@@ -211,6 +245,9 @@ app.patch("/updateName", jsonParser, apiFunc.valUpdateName(), (req, res) => {
 
 // Fetch user name
 app.get("/getUserName", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
   let userID = req.session.users_ID;
   dbFunc.getuserName(userID, (rows) => {
     if (rows === 400) {
@@ -218,12 +255,16 @@ app.get("/getUserName", jsonParser, (req, res) => {
     } else {
       console.log(rows);
       res.status(200).send(rows);
+      log.info(`success - get name, userType: ${type}, ip address: ${ip}`);
     }
   });
 });
 
 // Fetch next user event
 app.get("/getUserEvent", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
   let userID = req.session.users_ID;
   dbFunc.getUserEvent(req, userID, (rows) => {
     if (rows === 400) {
@@ -231,6 +272,9 @@ app.get("/getUserEvent", jsonParser, (req, res) => {
     } else {
       console.log(rows);
       res.status(200).send(rows);
+      log.info(
+        `success - get next event, userType: ${type}, ip address: ${ip}`
+      );
     }
   });
 });

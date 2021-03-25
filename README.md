@@ -1,12 +1,18 @@
 ## The web service for scheduleStuff
 
-# database conn Create folder "config at root level", add .env and copy/paste the fol
+# Database conn
 
-DB_HOST=localhost
-DB_USER=scheduleStuffAdmin
-DB_PASS=go
-DB_DATABASE=scheduleStuff
-DB_PORT=8889
+create folder "config at root level", add .env file to config folder
+
+Make a DB and upload the /sql-dump/\_DB_scheduleStuff.sql file
+
+Copy and paste the following into env => Make a user and fill in the following details
+
+DB_HOST=
+DB_USER=
+DB_PASS=
+DB_DATABASE=
+DB_PORT=
 
 ## Get started
 
@@ -32,4 +38,4 @@ To be added
 
 ## MYSQL export
 
-See ./sql-dump
+See /sql-dump

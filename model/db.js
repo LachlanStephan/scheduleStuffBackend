@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const saltRounds = 10;
 // import { fromUnixTime } from "date-fns";
 const { format } = require("date-fns");
+const log = require("../logger/logger");
 
 ////////////////////////////////////////////////////////////
 // DB connection
@@ -35,6 +36,7 @@ const getSchedule = (userID, curDate, cb) => {
     console.log("Checksql1", rows, "after query");
     // In case of error
     if (err) {
+      log.error(`query failed - getSchedule, sql: ${sql}, error: ${err}`);
       cb(400);
     }
     // If correct ---> send rows in callback to the route
@@ -64,10 +66,14 @@ const addSchedule = (req, users_ID, cb) => {
   pool.getConnection(function (err, connection) {
     connection.beginTransaction(function (err) {
       if (err) {
+        log.error(`connection failed - addSchedule, error: ${err}`);
         throw err;
       } else {
         connection.query(sql, [values], (err, rows) => {
           if (err) {
+            log.error(
+              `query failed - addSchedule insert, sql: ${sql}, error: ${err}`
+            );
             cb(0);
             return connection.rollback(function () {
               throw err;
@@ -82,6 +88,9 @@ const addSchedule = (req, users_ID, cb) => {
           let sql2 = "INSERT INTO userEvent (users_ID, event_ID) VALUES (?)";
           connection.query(sql2, [values2], (err) => {
             if (err) {
+              log.error(
+                `query failed - addSchedule, insert to userEvent table, sql: ${sql}, error: ${err}`
+              );
               cb(0);
               return connection.rollback(function () {
                 throw err;
@@ -93,6 +102,7 @@ const addSchedule = (req, users_ID, cb) => {
         });
         connection.commit(function (err) {
           if (err) {
+            log.error(`connection commit failed - addSchedule, error: ${err}`);
             return connection.rollback(function () {
               throw err;
             });
@@ -150,6 +160,9 @@ const regUser = (req, cb) => {
         // In case of error
         console.log(check_user_sql);
         if (err) {
+          log.error(
+            `query failed - regUser, check email exists, sql: ${sql}, error: ${err}`
+          );
           cb(0);
         }
         // check if the email already exists
@@ -160,6 +173,9 @@ const regUser = (req, cb) => {
           pool.query(sql, [values], (err, rows) => {
             // Check for error
             if (err) {
+              log.error(
+                `query failed, insert - regUser, sql ${sql}, error: ${err}`
+              );
               console.log(err);
             } else {
               // If correct ---> parse 201
@@ -183,6 +199,7 @@ const login = (req, cb) => {
   let sql = "SELECT * FROM Users WHERE email = ? ";
   pool.query(sql, email, (err, rows) => {
     if (err) {
+      log.error(`query failed - login, sql: ${sql}, error: ${err}`);
       console.log(err);
       cb(400);
     }
@@ -191,16 +208,13 @@ const login = (req, cb) => {
         if (result === true) {
           pool.query(sql, values, (err, rows) => {
             if (err) {
+              log.error(`query failed - login, sql: ${sql}, error: ${err}`);
               cb(400);
               console.log(err);
             }
             if (rows.length > 0) {
               console.log(rows);
               cb(rows);
-            }
-            if (err) {
-              cb(0);
-              console.log(err);
             }
           });
         } else {
@@ -222,6 +236,7 @@ const updateName = (req, userID, cb) => {
   let sql = "UPDATE Users SET fName = (?) WHERE users_ID = " + userID;
   pool.query(sql, value, (err, rows) => {
     if (err) {
+      log.error(`query failed - updateName, sql: ${sql}, error: ${err}`);
       console.log(err);
       cb(400);
     } else {
@@ -235,6 +250,7 @@ const getuserName = (userID, cb) => {
   let sql = "SELECT fName FROM Users WHERE users_ID = " + userID;
   pool.query(sql, (err, rows) => {
     if (err) {
+      log.error(`query failed - getuserName, sql: ${sql}, ${err}`);
       console.log(err);
       cb(400);
     } else {
@@ -251,6 +267,7 @@ const getUserEvent = (req, userID, cb) => {
     " ORDER BY Schedule.startDate, Schedule.startTime DESC";
   pool.query(sql, (err, rows) => {
     if (err) {
+      log.error(`query failed - getUserEvent, sql: ${sql}, ${err}`);
       console.log(err);
     } else {
       cb(rows[0]);

@@ -49,7 +49,7 @@ const valUpdateName = () => {
 // Validate query param for getSchedule
 ////////////////////////////////////////////////////////////
 // const valQueryParmSchedule = () => {
-//   body(req.params).notEmpty().isLength({ min: 24, max: 24 });
+//   body(req.params.path).notEmpty().isLength({ min: 24, max: 24 });
 // };
 
 ////////////////////////////////////////////////////////////
@@ -71,6 +71,7 @@ const valErrors = (req, cb) => {
 
 // Exports
 module.exports = {
+  // valQueryParmSchedule,
   valUpdateName,
   valLog,
   valaddSchedule,
