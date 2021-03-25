@@ -1,12 +1,12 @@
-#### The web service for scheduleStuff
+## The web service for scheduleStuff
 
-- database conn - Create folder "config at root level", add .env and copy/paste the following
+# database conn Create folder "config at root level", add .env and copy/paste the fol
 
-DB_HOST=
-DB_USER=
-DB_PASS=
-DB_DATABASE=
-DB_PORT=
+DB_HOST=localhost
+DB_USER=scheduleStuffAdmin
+DB_PASS=go
+DB_DATABASE=scheduleStuff
+DB_PORT=8889
 
 ## Get started
 
@@ -32,4 +32,4 @@ To be added
 
 ## MYSQL export
 
-To be added
+See ./sql-dump
