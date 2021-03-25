@@ -21,8 +21,8 @@ const valaddSchedule = () => {
 const valReg = () => {
   // Validate each input
   return [
-    body("fName").notEmpty().isLength({ min: 2, max: 20 }),
-    body("lName").notEmpty().isLength({ min: 3 }),
+    body("fName").notEmpty().isLength({ min: 2, max: 30 }),
+    body("lName").notEmpty().isLength({ min: 3, max: 30 }),
     body("email").isEmail(),
     body("password").notEmpty().isLength({ min: 8 }),
   ];

@@ -24,8 +24,7 @@ const getSchedule = (userID, curDate, cb) => {
   let date = format(new Date(curDate), "yyyy-MM-dd");
   console.log(date, "post-format");
   // Select query
-  let sql = // QUERY DOES NOT WORK
-    // Try select * from schedule -> LEFT JOIN
+  let sql =
     "SELECT * FROM Schedule LEFT JOIN userEvent ON Schedule.event_ID = userEvent.event_ID  WHERE userEvent.users_ID = '" +
     userID +
     "' AND Schedule.startDate = '" +
@@ -133,20 +132,23 @@ const regUser = (req, cb) => {
     bcrypt.hash(password, salt, (err, hash) => {
       pass = hash;
       console.log(pass);
+
       let values = [req.body.fName, req.body.lName, req.body.email, pass];
 
+      console.log(req.body.email);
       // SQL that will be used for insert to DB
       let sql = "INSERT INTO Users (fName, lName, email, password) VALUES (?)";
 
-      // For checking the email exists query
+      // For the checking email exists query
       let checkEmail = req.body.email;
 
       // SQL to check if email is in use
-      let check_user_sql = "SELECT * FROM USERS WHERE email = (?)";
+      let check_user_sql = "SELECT * FROM Users WHERE email = (?)";
 
       // Run email check query
       pool.query(check_user_sql, checkEmail, (err, rows) => {
         // In case of error
+        console.log(check_user_sql);
         if (err) {
           cb(0);
         }
