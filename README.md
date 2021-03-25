@@ -1,5 +1,13 @@
 #### The web service for scheduleStuff
 
+- database conn - Create folder "config at root level", add .env and copy/paste the following
+
+DB_HOST=
+DB_USER=
+DB_PASS=
+DB_DATABASE=
+DB_PORT=
+
 ## Get started
 
 - Git clone
@@ -19,5 +27,9 @@ This project is to serve scheduleStuff -> it is currently serving a nextjs clien
 To be added
 
 ## Crud matrix
+
+To be added
+
+## MYSQL export
 
 To be added

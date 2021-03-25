@@ -1,4 +1,4 @@
-const { body, check, validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 
 ////////////////////////////////////////////////////////////
 // Validate schedule
@@ -15,33 +15,47 @@ const valaddSchedule = () => {
   ];
 };
 
-const valaddScheduleErr = (req, cb) => {
-  const errors = validationResult(req);
-  // Checking for errors
-  if (!errors.isEmpty()) {
-    console.log(errors.array());
-    cb(422);
-  }
-  // No errors --> parse 200
-  if (errors.isEmpty()) {
-    cb(200);
-  }
-};
-
 ////////////////////////////////////////////////////////////
 // Validate register
 ////////////////////////////////////////////////////////////
 const valReg = () => {
   // Validate each input
   return [
-    body("fName").notEmpty(),
+    body("fName").notEmpty().isLength({ min: 2, max: 20 }),
     body("lName").notEmpty().isLength({ min: 3 }),
     body("email").isEmail(),
     body("password").notEmpty().isLength({ min: 8 }),
   ];
 };
 
-const valRegErr = (req, cb) => {
+////////////////////////////////////////////////////////////
+// Validate login
+////////////////////////////////////////////////////////////
+const valLog = () => {
+  return [
+    body("email").isEmail(),
+    body("password").notEmpty().isLength({ min: 8 }),
+  ];
+};
+
+////////////////////////////////////////////////////////////
+// Validate updating user name
+////////////////////////////////////////////////////////////
+const valUpdateName = () => {
+  return [body("fName").notEmpty().isLength({ min: 2, max: 20 })];
+};
+
+////////////////////////////////////////////////////////////
+// Validate query param for getSchedule
+////////////////////////////////////////////////////////////
+// const valQueryParmSchedule = () => {
+//   body(req.params).notEmpty().isLength({ min: 24, max: 24 });
+// };
+
+////////////////////////////////////////////////////////////
+// Validate all errors
+////////////////////////////////////////////////////////////
+const valErrors = (req, cb) => {
   const errors = validationResult(req);
   console.log("check1", errors);
   // Checking for errors
@@ -57,8 +71,9 @@ const valRegErr = (req, cb) => {
 
 // Exports
 module.exports = {
+  valUpdateName,
+  valLog,
   valaddSchedule,
-  valaddScheduleErr,
   valReg,
-  valRegErr,
+  valErrors,
 };

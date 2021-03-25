@@ -1,5 +1,9 @@
 const mysql = require("mysql");
 require("dotenv").config({ path: "./config/.env" });
+const bcrypt = require("bcryptjs");
+const saltRounds = 10;
+// import { fromUnixTime } from "date-fns";
+const { format } = require("date-fns");
 
 ////////////////////////////////////////////////////////////
 // DB connection
@@ -15,18 +19,30 @@ const pool = mysql.createPool({
 ////////////////////////////////////////////////////////////
 // Func to retrieve schedule for users
 ////////////////////////////////////////////////////////////
-const getSchedule = (userID, cb) => {
+const getSchedule = (userID, curDate, cb) => {
+  console.log(curDate, "pre-format");
+  let date = format(new Date(curDate), "yyyy-MM-dd");
+  console.log(date, "post-format");
   // Select query
-  let sql =
-    "SELECT * FROM userEvent INNER JOIN Schedule ON userEvent.event_ID = Schedule.event_ID WHERE userEvent.users_ID = " +
-    userID;
+  let sql = // QUERY DOES NOT WORK
+    // Try select * from schedule -> LEFT JOIN
+    "SELECT * FROM Schedule LEFT JOIN userEvent ON Schedule.event_ID = userEvent.event_ID  WHERE userEvent.users_ID = '" +
+    userID +
+    "' AND Schedule.startDate = '" +
+    date +
+    "' ORDER BY Schedule.startTime ASC";
   pool.query(sql, (err, rows) => {
+    console.log(sql);
+    console.log("Checksql1", rows, "after query");
     // In case of error
     if (err) {
-      cb(0);
-    } else {
-      // If correct ---> send rows in callback to the route
+      cb(400);
+    }
+    // If correct ---> send rows in callback to the route
+    if (rows.length > 0) {
       cb(rows);
+    } else {
+      cb(204);
     }
   });
 };
@@ -59,7 +75,7 @@ const addSchedule = (req, users_ID, cb) => {
             });
           } else {
             cb(201);
-            console.log("check", rows, rows.insertId); // Coming back undefined --> need this to work for 2nd part of transaction
+            console.log("check", rows, rows.insertId);
           }
           let eventID = rows.insertId;
           let userID = users_ID;
@@ -111,44 +127,46 @@ const addSchedule = (req, users_ID, cb) => {
 ////////////////////////////////////////////////////////////
 const regUser = (req, cb) => {
   // set form data that will be inserted
-  let values = [
-    req.body.fName,
-    req.body.lName,
-    req.body.email,
-    req.body.password,
-  ];
   console.log("check2");
+  let password = req.body.password;
+  bcrypt.genSalt(saltRounds, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      pass = hash;
+      console.log(pass);
+      let values = [req.body.fName, req.body.lName, req.body.email, pass];
 
-  // SQL that will be used for insert to DB
-  let sql = "INSERT INTO Users (fName, lName, email, password) VALUES (?)";
+      // SQL that will be used for insert to DB
+      let sql = "INSERT INTO Users (fName, lName, email, password) VALUES (?)";
 
-  // For checking the email exists query
-  let checkEmail = req.body.email;
+      // For checking the email exists query
+      let checkEmail = req.body.email;
 
-  // SQL to check if email is in use
-  let check_user_sql = "SELECT * FROM USERS WHERE email = (?)";
+      // SQL to check if email is in use
+      let check_user_sql = "SELECT * FROM USERS WHERE email = (?)";
 
-  // Run email check query
-  pool.query(check_user_sql, checkEmail, (err, rows) => {
-    // In case of error
-    if (err) {
-      cb(0);
-    }
-    // check if the email already exists
-    if (rows.length > 0) {
-      cb(409);
-    } else {
-      // if new user ----> add new user
-      pool.query(sql, [values], (err, rows) => {
-        // Check for error
+      // Run email check query
+      pool.query(check_user_sql, checkEmail, (err, rows) => {
+        // In case of error
         if (err) {
-          console.log(err);
+          cb(0);
+        }
+        // check if the email already exists
+        if (rows.length > 0) {
+          cb(409);
         } else {
-          // If correct ---> parse 201
-          cb(201);
+          // if new user ----> add new user
+          pool.query(sql, [values], (err, rows) => {
+            // Check for error
+            if (err) {
+              console.log(err);
+            } else {
+              // If correct ---> parse 201
+              cb(201);
+            }
+          });
         }
       });
-    }
+    });
   });
 };
 
@@ -157,22 +175,39 @@ const regUser = (req, cb) => {
 ////////////////////////////////////////////////////////////
 const login = (req, cb) => {
   // set login data
-  let values = [req.body.email, req.body.password];
-  let sql = "SELECT * FROM Users where email = ? AND password = ?";
-  // run the query
-  pool.query(sql, values, (err, rows) => {
-    // In case of error
+  let email = req.body.email;
+  let pass = req.body.password;
+  let values = [email, pass];
+  let sql = "SELECT * FROM Users WHERE email = ? ";
+  pool.query(sql, email, (err, rows) => {
     if (err) {
       console.log(err);
-    }
-    // if the login does not exist
-    if (rows.length === 0) {
-      cb(0);
+      cb(400);
     }
     if (rows.length > 0) {
-      // if everything is correct -----> send rows
-      console.log(rows.users_ID);
-      cb(rows[0].users_ID);
+      bcrypt.compare(pass, rows[0].password, function (err, result) {
+        if (result === true) {
+          pool.query(sql, values, (err, rows) => {
+            if (err) {
+              cb(400);
+              console.log(err);
+            }
+            if (rows.length > 0) {
+              console.log(rows);
+              cb(rows);
+            }
+            if (err) {
+              cb(0);
+              console.log(err);
+            }
+          });
+        } else {
+          cb(0);
+        }
+      });
+    } else {
+      console.log("hi");
+      cb(0);
     }
   });
 };
@@ -193,10 +228,40 @@ const updateName = (req, userID, cb) => {
   });
 };
 
+// Get the users name
+const getuserName = (userID, cb) => {
+  let sql = "SELECT fName FROM Users WHERE users_ID = " + userID;
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      console.log(err);
+      cb(400);
+    } else {
+      cb(rows[0]);
+    }
+  });
+};
+
+// Get the users next event
+const getUserEvent = (req, userID, cb) => {
+  let sql =
+    "SELECT eventName FROM Schedule INNER JOIN userEvent ON schedule.event_ID = userEvent.event_ID WHERE userEvent.users_ID = " +
+    userID +
+    " ORDER BY Schedule.startDate, Schedule.startTime DESC";
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      console.log(err);
+    } else {
+      cb(rows[0]);
+    }
+  });
+};
+
 ////////////////////////////////////////////////////////////
 // Exports all func
 ////////////////////////////////////////////////////////////
 module.exports = {
+  getUserEvent,
+  getuserName,
   updateName,
   addSchedule,
   getSchedule,

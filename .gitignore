@@ -4,4 +4,7 @@
 # credentials 
 /config 
 
+# logs
+/logs
+
 .DS_Store

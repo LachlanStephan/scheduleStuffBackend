@@ -9,12 +9,10 @@ const apiFunc = require("./api/api");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
-const { body, check, validationResult } = require("express-validator");
+const log = require("./logger/logger");
 
 //////////////////////////////////////////
 // Notes to self
-// Use npm winston for logging ---> make logging table
-// Use crypto-js for hashing passwords
 //////////////////////////////////////////
 
 // To set sessions
@@ -38,36 +36,42 @@ app.use(
 // Handle cors
 app.use(
   cors({
+    // Only accept req from scheduleStuff client
     origin: "http://localhost:3000",
     credentials: true,
   })
 );
 
 // To rate limit the API from spam/bots
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15mins
-  max: 100, // limit each IP to 100 requests per windowMS
+const dailyLimiter = rateLimit({
+  windowMs: 1000 * 60 * 60 * 24,
+  max: 3000, // limit each IP to 1000 requests per day
 });
 
-// *********** to change this to fit assess criteria, will need a 2nd one as well ********* //
-app.use(limiter);
+const userLimiter = rateLimit({
+  windowMs: 1000,
+  max: 10, // limit each user to 10 req per sec --> **** 1 is not enough ****
+});
+
+app.use(dailyLimiter);
 
 // To parse json data
 let jsonParser = bodyParser.json();
 
 // Retrieve schedule for user
-app.get("/schedule", (req, res) => {
+app.get("/schedule/:curDate", (req, res) => {
+  // Log the route has been accessed
   // Assign the user ID
-  let isLoggedin = req.session.isLoggedin;
   let users_ID = req.session.users_ID;
-  console.log(users_ID);
-  // Parse userID to query
-  dbFunc.getSchedule(users_ID, (rows) => {
-    if ((isLoggedin = false)) {
+  let curDate = req.params.curDate;
+  console.log(users_ID, curDate);
+  // Parse userID to query && date
+  dbFunc.getSchedule(users_ID, curDate, (rows) => {
+    if ((users_ID = null)) {
       res.status(401).send();
     }
     // Connected but no content
-    if (rows === 0) {
+    if (rows === 204) {
       res.status(204).send();
     } else {
       // If correct ---> send rows(schedule)
@@ -81,11 +85,13 @@ app.get("/schedule", (req, res) => {
 app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
   console.log(req.body);
   let users_ID = req.session.users_ID;
+  let type = req.session.userType;
   console.log(users_ID);
   // Call the fucntion to check for errors and return callback
-  apiFunc.valaddScheduleErr(req, (cb) => {
+  apiFunc.valErrors(req, (cb) => {
     // If input is invalid
     if (cb === 422) {
+      log.info("failed to vailidate - addSchedule");
       res.status(422).send();
     }
     // If input is valid --> continue to db function
@@ -95,6 +101,7 @@ app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
           res.status(400).send();
         }
         if (cb === 201) {
+          log.info("successfully inserted schedule", type);
           res.status(201).send();
         }
       });
@@ -106,14 +113,16 @@ app.post("/addSchedule", jsonParser, apiFunc.valaddSchedule(), (req, res) => {
 app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
   console.log("got body", req.body);
   // Call the fucntion to check for errors and return callback
-  apiFunc.valRegErr(req, (cb) => {
+  apiFunc.valErrors(req, (cb) => {
     // If input is invalid
     if (cb === 422) {
+      log.error("failed to validate - register");
       res.status(422).send();
     }
     // If input is valid --> continue to db function
     if (cb === 200) {
       dbFunc.regUser(req, (userCheck) => {
+        console.log(req.body.password);
         if (userCheck === 0) {
           console.log("failed");
         }
@@ -121,8 +130,9 @@ app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
         if (userCheck === 409) {
           res.status(409).send();
         }
-        // If correct ---> send 201 && set session
+        // If correct ---> send 201
         if (userCheck === 201) {
+          log.info("Successful registration");
           res.status(201).send("new user added");
           // req.session.isLoggedin = true;
           // req.session.users_ID = users_ID;
@@ -136,19 +146,30 @@ app.post("/regUser", jsonParser, apiFunc.valReg(), (req, res) => {
 });
 
 // Handle the login
-app.post("/login", jsonParser, (req, res) => {
+app.post("/login", jsonParser, apiFunc.valLog(), (req, res) => {
   console.log("got body", req.body);
-  dbFunc.login(req, (users_ID) => {
-    // Check if this is a valid userID
-    if (users_ID === 0) {
-      res.status(401).send("this login does not exist");
-      req.session.isLoggedin = false;
-    } else {
-      // If valid ----> set session and 200 ok
-      req.session.isLoggedin = true;
-      req.session.users_ID = users_ID;
-      res.status(200).send("session set and user logged in");
-      console.log("success", users_ID, req.session);
+  let ip = req.ip;
+  log.info(`App visited, ip address: ${ip}`);
+  apiFunc.valErrors(req, (cb) => {
+    if (cb === 422) {
+      log.info("Failed validation - login");
+      res.status(422).send();
+    }
+    if (cb === 200) {
+      dbFunc.login(req, (rows) => {
+        // Check if this is a valid userID
+        if (rows === 0) {
+          res.status(401).send("this login does not exist");
+        } else {
+          // If valid ----> set session and 200 ok
+          req.session.isLoggedin = true;
+          req.session.users_ID = rows[0].users_ID;
+          req.session.userType = rows[0].userType;
+          res.status(200).send("session set and user logged in");
+          console.log("success", req.session.users_ID, req.session.userType);
+          log.info(`Successful login, userType: ${req.session.userType}`);
+        }
+      });
     }
   });
 });
@@ -167,16 +188,49 @@ app.post("/logout", (req, res) => {
   });
 });
 
-// Users to update their names
-app.patch("/updateName", jsonParser, (req, res) => {
+// Update the users name
+app.patch("/updateName", jsonParser, apiFunc.valUpdateName(), (req, res) => {
   console.log("got body", req.body);
   let userID = req.session.users_ID;
-  dbFunc.updateName(req, userID, (cb) => {
-    if (cb === 400) {
-      res.status(400).send();
+  apiFunc.valErrors(req, (cb) => {
+    if (cb === 422) {
+      res.status(422).send();
     }
-    if (cb === 201) {
-      res.status(201).send();
+    if (cb === 200) {
+      dbFunc.updateName(req, userID, (cb) => {
+        if (cb === 400) {
+          res.status(400).send();
+        }
+        if (cb === 201) {
+          res.status(201).send();
+        }
+      });
+    }
+  });
+});
+
+// Fetch user name
+app.get("/getUserName", jsonParser, (req, res) => {
+  let userID = req.session.users_ID;
+  dbFunc.getuserName(userID, (rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    } else {
+      console.log(rows);
+      res.status(200).send(rows);
+    }
+  });
+});
+
+// Fetch next user event
+app.get("/getUserEvent", jsonParser, (req, res) => {
+  let userID = req.session.users_ID;
+  dbFunc.getUserEvent(req, userID, (rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    } else {
+      console.log(rows);
+      res.status(200).send(rows);
     }
   });
 });
