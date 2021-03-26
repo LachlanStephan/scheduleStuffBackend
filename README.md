@@ -20,6 +20,16 @@ DB_PORT=
 - npm i
 - node server.js
 
+## Test web service
+
+This web service is being tested via jestjs. To run tests enter the following command
+
+- npm test
+
+Please note - Not all test functions have been written
+
+For additional info on jestjs - https://jestjs.io/
+
 ## See client here
 
 https://github.com/LachlanStephan/scheduleStuff
