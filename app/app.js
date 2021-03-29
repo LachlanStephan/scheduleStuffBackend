@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const nodemon = require("nodemon");
 const bodyParser = require("body-parser");
 const dbFunc = require("../model/db");
 const apiFunc = require("../api/api");
@@ -9,7 +8,6 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
-const supertest = require("supertest");
 
 //////////////////////////////////////////
 // Notes to self
@@ -53,7 +51,7 @@ const userLimiter = rateLimit({
   max: 10, // limit each user to 10 req per sec --> **** 1 is not enough ****
 });
 
-app.use(dailyLimiter);
+app.use(dailyLimiter, userLimiter);
 
 // To parse json data
 let jsonParser = bodyParser.json();
