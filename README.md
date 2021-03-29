@@ -1,17 +1,5 @@
 ## The web service for scheduleStuff
 
-Hi John, here is a link to the repo
-
-web service - https://github.com/LachlanStephan/scheduleStuffBackend
-
----
-
-IF YOU CLONE THE CLIENT TO TEST
-
-- Clone the "updates" branch, master is many commits behind and will not work with this version of the web service
-
----
-
 # Database conn
 
 create folder "config at root level", add .env file to config folder
