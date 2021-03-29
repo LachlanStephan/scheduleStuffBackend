@@ -69,7 +69,7 @@ app.get("/schedule/:curDate", (req, res) => {
   console.log(users_ID, curDate);
   // Parse userID to query && date
   dbFunc.getSchedule(users_ID, curDate, (rows) => {
-    if ((users_ID = null)) {
+    if (users_ID === null) {
       res.status(401).send();
     }
     if (rows === 400) {
