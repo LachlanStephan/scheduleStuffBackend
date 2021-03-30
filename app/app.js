@@ -8,6 +8,7 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
+const { json } = require("body-parser");
 
 //////////////////////////////////////////
 // Notes to self
@@ -267,7 +268,7 @@ app.get("/getUserEvent", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
   let userID = req.session.users_ID;
-  dbFunc.getUserEvent(req, userID, (rows) => {
+  dbFunc.getUserEvent(userID, (rows) => {
     if (rows === 400) {
       res.status(400).send();
     } else {
@@ -275,6 +276,26 @@ app.get("/getUserEvent", jsonParser, (req, res) => {
       res.status(200).send(rows);
       log.info(
         `success - get next event, userType: ${type}, ip address: ${ip}`
+      );
+    }
+  });
+});
+
+// Delete user events
+app.post("/deleteEvent", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(req.body, "delete check", req.body.event_ID);
+  dbFunc.deleteUserEvent(req, userID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    }
+    if (cb === 204) {
+      res.status(204).send();
+      log.info(
+        `success - delete user event, userType: ${type}, ip address: ${ip}`
       );
     }
   });

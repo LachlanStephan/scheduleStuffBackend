@@ -260,11 +260,11 @@ const getuserName = (userID, cb) => {
 };
 
 // Get the users next event
-const getUserEvent = (req, userID, cb) => {
+const getUserEvent = (userID, cb) => {
   let sql =
-    "SELECT eventName FROM Schedule INNER JOIN userEvent ON schedule.event_ID = userEvent.event_ID WHERE userEvent.users_ID = " +
+    "SELECT eventName FROM Schedule INNER JOIN userEvent ON Schedule.event_ID = userEvent.event_ID WHERE userEvent.users_ID = " +
     userID +
-    " ORDER BY Schedule.startDate, Schedule.startTime DESC";
+    " ORDER BY Schedule.startDate, Schedule.startTime ASC";
   pool.query(sql, (err, rows) => {
     if (err) {
       log.error(`query failed - getUserEvent, sql: ${sql}, ${err}`);
@@ -275,10 +275,37 @@ const getUserEvent = (req, userID, cb) => {
   });
 };
 
+// Delete a users event
+const deleteUserEvent = (req, userID, cb) => {
+  let eventID = req.body.event_ID;
+  console.log(eventID);
+  let sql =
+    "DELETE FROM userEvent WHERE event_ID = " +
+    eventID +
+    " AND users_ID = " +
+    userID;
+  let sql2 = "DELETE FROM schedule WHERE event_ID = " + eventID;
+  pool.query(sql, (err) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      pool.query(sql2, (err) => {
+        if (err) {
+          cb(400);
+        } else {
+          cb(204);
+        }
+      });
+    }
+  });
+};
+
 ////////////////////////////////////////////////////////////
 // Exports all func
 ////////////////////////////////////////////////////////////
 module.exports = {
+  deleteUserEvent,
   getUserEvent,
   getuserName,
   updateName,
