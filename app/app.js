@@ -287,11 +287,14 @@ app.post("/deleteEvent", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
   let userID = req.session.users_ID;
-  console.log(req.body, "delete check", req.body.event_ID);
+  console.log(req.body.event_ID);
+  // Call db function
   dbFunc.deleteUserEvent(req, userID, (cb) => {
+    // If err
     if (cb === 400) {
       res.status(400).send();
     }
+    // If successfully deleted
     if (cb === 204) {
       res.status(204).send();
       log.info(

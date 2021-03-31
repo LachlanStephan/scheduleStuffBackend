@@ -245,7 +245,9 @@ const updateName = (req, userID, cb) => {
   });
 };
 
+////////////////////////////////////////////////////////////
 // Get the users name
+////////////////////////////////////////////////////////////
 const getuserName = (userID, cb) => {
   let sql = "SELECT fName FROM Users WHERE users_ID = " + userID;
   pool.query(sql, (err, rows) => {
@@ -259,7 +261,9 @@ const getuserName = (userID, cb) => {
   });
 };
 
+////////////////////////////////////////////////////////////
 // Get the users next event
+////////////////////////////////////////////////////////////
 const getUserEvent = (userID, cb) => {
   let sql =
     "SELECT eventName FROM Schedule INNER JOIN userEvent ON Schedule.event_ID = userEvent.event_ID WHERE userEvent.users_ID = " +
@@ -269,27 +273,34 @@ const getUserEvent = (userID, cb) => {
     if (err) {
       log.error(`query failed - getUserEvent, sql: ${sql}, ${err}`);
       console.log(err);
+      cb(400);
     } else {
       cb(rows[0]);
     }
   });
 };
 
+////////////////////////////////////////////////////////////
 // Delete a users event
+////////////////////////////////////////////////////////////
 const deleteUserEvent = (req, userID, cb) => {
   let eventID = req.body.event_ID;
   console.log(eventID);
+  // Delete from userEvent table - query 1
   let sql =
     "DELETE FROM userEvent WHERE event_ID = " +
     eventID +
     " AND users_ID = " +
     userID;
+  // Delete from schedule table - query 2
   let sql2 = "DELETE FROM schedule WHERE event_ID = " + eventID;
   pool.query(sql, (err) => {
+    // Err
     if (err) {
       cb(400);
       console.log(err);
     } else {
+      // If success call 2nd query
       pool.query(sql2, (err) => {
         if (err) {
           cb(400);
