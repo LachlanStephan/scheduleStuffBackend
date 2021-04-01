@@ -330,4 +330,21 @@ app.get("/getID", jsonParser, (req, res) => {
   }
 });
 
+// **** Need to add validation && logging
+app.post("/addFriend", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  // call db func
+  dbFunc.addFriend(req, userID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    }
+    if (cb === 200) {
+      res.status(200).send();
+    }
+  });
+});
+
 module.exports = server;
