@@ -9,9 +9,21 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
 const { json } = require("body-parser");
+const server = require("http").createServer(app);
+
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
+
+io.on("connection", (socket) => {
+  socket.send("hello");
+});
 
 //////////////////////////////////////////
 // Notes to self
+// Make an add friend table and route
 //////////////////////////////////////////
 
 // To set sessions
@@ -304,4 +316,18 @@ app.post("/deleteEvent", jsonParser, (req, res) => {
   });
 });
 
-module.exports = app;
+app.get("/getID", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  // send userID
+  if ((userID = req.session.users_ID)) {
+    res.status(200).json(userID);
+    console.log(userID);
+  } else {
+    res.status(400).send();
+  }
+});
+
+module.exports = server;

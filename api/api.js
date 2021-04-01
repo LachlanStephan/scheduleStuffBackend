@@ -42,7 +42,9 @@ const valLog = () => {
 // Validate updating user name
 ////////////////////////////////////////////////////////////
 const valUpdateName = () => {
-  return [body("fName").notEmpty().isLength({ min: 2, max: 20 })];
+  return [
+     body("newName").notEmpty().isLength({ min: 2, max: 20 })
+  ];
 };
 
 ////////////////////////////////////////////////////////////
