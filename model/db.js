@@ -2,13 +2,10 @@ const mysql = require("mysql");
 require("dotenv").config({ path: "./config/.env" });
 const bcrypt = require("bcryptjs");
 const saltRounds = 10;
-// import { fromUnixTime } from "date-fns";
 const { format } = require("date-fns");
 const log = require("../logger/logger");
 
-////////////////////////////////////////////////////////////
 // DB connection
-////////////////////////////////////////////////////////////
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -17,9 +14,7 @@ const pool = mysql.createPool({
   database: process.env.DB_DATABASE,
 });
 
-////////////////////////////////////////////////////////////
 // Func to retrieve schedule for users
-////////////////////////////////////////////////////////////
 const getSchedule = (userID, curDate, cb) => {
   console.log(curDate, "pre-format");
   let date = format(new Date(curDate), "yyyy-MM-dd");
@@ -48,9 +43,7 @@ const getSchedule = (userID, curDate, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Func to add a users schedule
-////////////////////////////////////////////////////////////
 const addSchedule = (req, users_ID, cb) => {
   let values = [
     req.body.startDate,
@@ -131,9 +124,7 @@ const addSchedule = (req, users_ID, cb) => {
 //   }
 // });
 
-////////////////////////////////////////////////////////////
 // Func to register user details
-////////////////////////////////////////////////////////////
 const regUser = (req, cb) => {
   // set form data that will be inserted
   console.log("check2");
@@ -188,9 +179,7 @@ const regUser = (req, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Func to check the login
-////////////////////////////////////////////////////////////
 const login = (req, cb) => {
   // set login data
   let email = req.body.email;
@@ -228,9 +217,7 @@ const login = (req, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Update the users name
-////////////////////////////////////////////////////////////
 const updateName = (req, userID, cb) => {
   let value = req.body.newName;
   let sql = "UPDATE Users SET fName = (?) WHERE users_ID = " + userID;
@@ -245,9 +232,7 @@ const updateName = (req, userID, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Get the users name
-////////////////////////////////////////////////////////////
 const getuserName = (userID, cb) => {
   let sql = "SELECT fName FROM Users WHERE users_ID = " + userID;
   pool.query(sql, (err, rows) => {
@@ -261,9 +246,7 @@ const getuserName = (userID, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Get the users next event
-////////////////////////////////////////////////////////////
 const getUserEvent = (userID, cb) => {
   let sql =
     "SELECT eventName FROM Schedule INNER JOIN userEvent ON Schedule.event_ID = userEvent.event_ID WHERE userEvent.users_ID = " +
@@ -280,9 +263,7 @@ const getUserEvent = (userID, cb) => {
   });
 };
 
-////////////////////////////////////////////////////////////
 // Delete a users event
-////////////////////////////////////////////////////////////
 const deleteUserEvent = (req, userID, cb) => {
   let eventID = req.body.event_ID;
   console.log(eventID);
@@ -312,10 +293,72 @@ const deleteUserEvent = (req, userID, cb) => {
   });
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+// Add friend
+const addFriend = (fID, userID, cb) => {
+  let values = [userID, fID];
+  let sql = "INSERT INTO friends (user1_ID, user2_ID) VALUES (?)";
+  pool.query(sql, [values], (err, rows) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      cb(201);
+    }
+  });
+};
+
+// Check for friend req
+const checkForFriend = (userID, cb) => {
+  let sql =
+    "SELECT fName FROM Users INNER JOIN friends ON Users.users_ID = friends.user1_ID WHERE user2_ID = " +
+    userID +
+    " AND status = 'Pending' ";
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      cb(rows[0]);
+      console.log(rows, "checkforfriendDBquery");
+    }
+  });
+};
+
+// Accept friend request
+const acceptFriend = (userID, cb) => {
+  let sql = "UPDATE friends SET status = 'accepted' WHERE user2_ID = " + userID;
+  pool.query(sql, (err) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      cb(200);
+    }
+  });
+};
+
+// Get friends list
+const friendsList = (userID, cb) => {
+  let sql =
+    "SELECT fName FROM Users INNER JOIN friends ON Users.users_ID = friends.user1_ID WHERE status = 'accepted' AND user2_ID = " +
+    userID;
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      cb(rows);
+      console.log(rows, "friendsListQuertCheck");
+    }
+  });
+};
+
 // Exports all func
-////////////////////////////////////////////////////////////
 module.exports = {
+  friendsList,
+  acceptFriend,
+  checkForFriend,
+  addFriend,
   deleteUserEvent,
   getUserEvent,
   getuserName,

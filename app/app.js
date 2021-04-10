@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
 const { json } = require("body-parser");
+const { features } = require("process");
 const server = require("http").createServer(app);
 
 const io = require("socket.io")(server, {
@@ -23,7 +24,6 @@ io.on("connection", (socket) => {
 
 //////////////////////////////////////////
 // Notes to self
-// Make an add friend table and route
 //////////////////////////////////////////
 
 // To set sessions
@@ -330,19 +330,71 @@ app.get("/getID", jsonParser, (req, res) => {
   }
 });
 
-// **** Need to add validation && logging
+// Need to add validation && logging
 app.post("/addFriend", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  console.log(req.body[0], "addFriend req check");
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  let fID = parseInt(req.body[0]);
+  // call db func
+  dbFunc.addFriend(fID, userID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    } else {
+      res.status(200).send(rows);
+    }
+  });
+});
+
+// Need to add validation && logging
+app.get("/checkFriend", jsonParser, (req, res) => {
   // Assign ip && userType for logging
   let ip = req.ip;
   let type = req.session.userType;
   let userID = req.session.users_ID;
+  console.log("checkFriend route check");
   // call db func
-  dbFunc.addFriend(req, userID, (cb) => {
+  dbFunc.checkForFriend(userID, (rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    }
+    if (rows === rows) {
+      res.status(200).send(rows);
+      console.log(rows);
+    }
+  });
+});
+
+// Need to add validation && logging
+app.patch("/acceptFriend", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  dbFunc.acceptFriend(userID, (cb) => {
     if (cb === 400) {
       res.status(400).send();
     }
     if (cb === 200) {
       res.status(200).send();
+    }
+  });
+});
+
+// Get friends list
+app.get("/friendsList", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  dbFunc.friendsList(userID, (rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    }
+    if (rows === rows) {
+      res.status(200).send(rows);
     }
   });
 });
