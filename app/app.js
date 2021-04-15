@@ -8,18 +8,13 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
-const { json } = require("body-parser");
-const { features } = require("process");
 const server = require("http").createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {
     origin: "http://localhost:3000",
+    credentials: true,
   },
-});
-
-io.on("connection", (socket) => {
-  socket.send("hello");
 });
 
 //////////////////////////////////////////
@@ -40,6 +35,7 @@ app.use(
       secure: false,
       maxAge: 365 * 24 * 60 * 60 * 1000,
       path: "/",
+      sameSite: "lax",
     },
   })
 );
@@ -68,6 +64,10 @@ app.use(dailyLimiter, userLimiter);
 
 // To parse json data
 let jsonParser = bodyParser.json();
+
+io.on("connection", (socket) => {
+  socket.send("hello", userID);
+});
 
 // Retrieve schedule for user
 app.get("/schedule/:curDate", (req, res) => {
@@ -395,6 +395,22 @@ app.get("/friendsList", jsonParser, (req, res) => {
     }
     if (rows === rows) {
       res.status(200).send(rows);
+    }
+  });
+});
+
+app.post("/addFriendToEvent", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(req);
+  dbFunc.addFriendToEvent(req, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    }
+    if (cb === 200) {
+      res.status(200).send();
     }
   });
 });

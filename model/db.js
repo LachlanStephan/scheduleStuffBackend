@@ -56,6 +56,8 @@ const addSchedule = (req, users_ID, cb) => {
   let sql =
     "INSERT INTO Schedule (startDate, endDate, startTime, endTime, eventName, eventDescription) values (?)";
 
+  let friendID = req.body.friendID;
+
   pool.getConnection(function (err, connection) {
     connection.beginTransaction(function (err) {
       if (err) {
@@ -93,6 +95,7 @@ const addSchedule = (req, users_ID, cb) => {
             }
           });
         });
+
         connection.commit(function (err) {
           if (err) {
             log.error(`connection commit failed - addSchedule, error: ${err}`);
@@ -317,6 +320,9 @@ const checkForFriend = (userID, cb) => {
     if (err) {
       cb(400);
       console.log(err);
+    }
+    if (rows.length === 0) {
+      cb(400);
     } else {
       cb(rows[0]);
       console.log(rows, "checkforfriendDBquery");
@@ -353,8 +359,21 @@ const friendsList = (userID, cb) => {
   });
 };
 
+const addFriendToEvent = (req, cb) => {
+  let values = [req.body.friendID, req.body.eventID];
+  let sql = "INSERT into userEvent (users_ID, event_ID) VALUES (?)";
+  pool.query(sql, [values], (err, rows) => {
+    if (err) {
+      cb(400);
+    } else {
+      cb(200);
+    }
+  });
+};
+
 // Exports all func
 module.exports = {
+  addFriendToEvent,
   friendsList,
   acceptFriend,
   checkForFriend,
