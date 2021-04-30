@@ -66,7 +66,7 @@ app.use(dailyLimiter, userLimiter);
 let jsonParser = bodyParser.json();
 
 io.on("connection", (socket) => {
-  socket.send("hello", userID);
+  socket.send("hello");
 });
 
 // Retrieve schedule for user
@@ -343,7 +343,7 @@ app.post("/addFriend", jsonParser, (req, res) => {
     if (cb === 400) {
       res.status(400).send();
     } else {
-      res.status(200).send(rows);
+      res.status(200).send();
     }
   });
 });
@@ -413,6 +413,33 @@ app.post("/addFriendToEvent", jsonParser, (req, res) => {
       res.status(200).send();
     }
   });
+});
+
+// Check if admin -> need to test this 
+app.get("/checkIfAdmin", jsonParser, (req, res) => {
+  // Assign ip && userType for logging
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(req.session.userType, "adminCheck");
+  if (req.session.userType != "Admin") {
+    res.status(403).send();
+  } 
+  if (req.session.userType = "Admin") {
+    res.status(200).send();
+  }
+})
+
+app.get("/checkLogin", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(userID, "checkLogin route");
+  if (!userID) {
+    res.status(403).send();
+  } else {
+    res.status(200).send();
+  }
 });
 
 module.exports = server;
