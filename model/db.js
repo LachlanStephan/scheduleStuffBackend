@@ -371,8 +371,20 @@ const addFriendToEvent = (req, cb) => {
   });
 };
 
+const getAllUsers = (cb) => {
+  let sql = "SELECT users_ID, fName, lName, email FROM Users";
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+    } else {
+      cb(rows);
+    }
+  });
+};
+
 // Exports all func
 module.exports = {
+  getAllUsers,
   addFriendToEvent,
   friendsList,
   acceptFriend,

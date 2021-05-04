@@ -8,6 +8,7 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const log = require("../logger/logger");
+const { json } = require("express");
 const server = require("http").createServer(app);
 
 const io = require("socket.io")(server, {
@@ -415,21 +416,6 @@ app.post("/addFriendToEvent", jsonParser, (req, res) => {
   });
 });
 
-// Check if admin -> need to test this 
-app.get("/checkIfAdmin", jsonParser, (req, res) => {
-  // Assign ip && userType for logging
-  let ip = req.ip;
-  let type = req.session.userType;
-  let userID = req.session.users_ID;
-  console.log(req.session.userType, "adminCheck");
-  if (req.session.userType != "Admin") {
-    res.status(403).send();
-  } 
-  if (req.session.userType = "Admin") {
-    res.status(200).send();
-  }
-})
-
 app.get("/checkLogin", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
@@ -440,6 +426,33 @@ app.get("/checkLogin", jsonParser, (req, res) => {
   } else {
     res.status(200).send();
   }
+});
+
+app.get("/checkAdmin", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(type, "checkAdmin");
+  if (type === "Admin") {
+    res.status(201).send();
+  } else {
+    res.status(403).send();
+  }
+});
+
+app.get("/getAllUsers", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log("get all users");
+  dbFunc.getAllUsers((rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    }
+    if (rows === rows) {
+      res.status(200).send();
+    }
+  });
 });
 
 module.exports = server;
