@@ -282,10 +282,13 @@ app.get("/getUserEvent", jsonParser, (req, res) => {
   let type = req.session.userType;
   let userID = req.session.users_ID;
   dbFunc.getUserEvent(userID, (rows) => {
+    console.log(rows, "getEvent**********");
     if (rows === 400) {
       res.status(400).send();
+    }
+    if (rows === 204) {
+      res.status(204).send();
     } else {
-      console.log(rows);
       res.status(200).send(rows);
       log.info(
         `success - get next event, userType: ${type}, ip address: ${ip}`
@@ -317,6 +320,8 @@ app.post("/deleteEvent", jsonParser, (req, res) => {
   });
 });
 
+// Get a users ID
+// TODO - Add logging
 app.get("/getID", jsonParser, (req, res) => {
   // Assign ip && userType for logging
   let ip = req.ip;
@@ -331,6 +336,7 @@ app.get("/getID", jsonParser, (req, res) => {
   }
 });
 
+// Add friend
 // Need to add validation && logging
 app.post("/addFriend", jsonParser, (req, res) => {
   // Assign ip && userType for logging
@@ -349,6 +355,7 @@ app.post("/addFriend", jsonParser, (req, res) => {
   });
 });
 
+// Check for friend requests
 // Need to add validation && logging
 app.get("/checkFriend", jsonParser, (req, res) => {
   // Assign ip && userType for logging
@@ -368,6 +375,7 @@ app.get("/checkFriend", jsonParser, (req, res) => {
   });
 });
 
+// Accept friend requests
 // Need to add validation && logging
 app.patch("/acceptFriend", jsonParser, (req, res) => {
   // Assign ip && userType for logging
@@ -385,6 +393,7 @@ app.patch("/acceptFriend", jsonParser, (req, res) => {
 });
 
 // Get friends list
+// TODO - Add logging
 app.get("/friendsList", jsonParser, (req, res) => {
   // Assign ip && userType for logging
   let ip = req.ip;
@@ -400,6 +409,8 @@ app.get("/friendsList", jsonParser, (req, res) => {
   });
 });
 
+// Add frient to event
+// TODO - Add logging && get this working
 app.post("/addFriendToEvent", jsonParser, (req, res) => {
   // Assign ip && userType for logging
   let ip = req.ip;
@@ -416,6 +427,8 @@ app.post("/addFriendToEvent", jsonParser, (req, res) => {
   });
 });
 
+// Check if user is logged in - restricts access if not
+// TODO - Add logging
 app.get("/checkLogin", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
@@ -428,18 +441,33 @@ app.get("/checkLogin", jsonParser, (req, res) => {
   }
 });
 
+// Check if user is Admin via userType and IP address
+// TODO - Add logging
 app.get("/checkAdmin", jsonParser, (req, res) => {
+  // TODO - This needs to be moved to a new table in DB -> new ip's added via admin panel
+  let whitelist = ["202.0.188.100", "::1"];
+  //
   let ip = req.ip;
   let type = req.session.userType;
   let userID = req.session.users_ID;
   console.log(type, "checkAdmin");
   if (type === "Admin") {
-    res.status(201).send();
-  } else {
+    for (let i = 0; i < whitelist.length; i++) {
+      if (ip === whitelist[1]) {
+        console.log(whitelist[1]);
+        res.status(201).send();
+      } else {
+        res.status(403).send();
+      }
+    }
+  }
+  if (type === "user") {
     res.status(403).send();
   }
 });
 
+// Get all users ****ADMIN
+// TODO - Add logging
 app.get("/getAllUsers", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
@@ -450,6 +478,56 @@ app.get("/getAllUsers", jsonParser, (req, res) => {
       res.status(400).send();
     }
     if (rows === rows) {
+      res.status(200).send(rows);
+    }
+  });
+});
+
+// Delete users ****ADMIN
+app.post("/deleteUser", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log(req.body.users_ID, "delete user route");
+  let delUserID = req.body.users_ID;
+  dbFunc.deleteUser(delUserID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    } else {
+      res.status(200).send();
+    }
+  });
+});
+
+app.get("/emptyEvents", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  console.log("emptyEvents route");
+  dbFunc.getEmptyEvents((rows) => {
+    if (rows === 400) {
+      res.status(400).send();
+    }
+    if (rows === 204) {
+      res.status(204).send();
+    }
+    if (rows === 200) {
+      res.status(200).send(rows);
+    }
+  });
+});
+
+app.patch("/promoteUser", jsonParser, (req, res) => {
+  let ip = req.ip;
+  let type = req.session.userType;
+  let userID = req.session.users_ID;
+  let promoteUserID = req.body.users_ID;
+  console.log("promoteUser route");
+  dbFunc.promoteUser(promoteUserID, (cb) => {
+    if (cb === 400) {
+      res.status(400).send();
+    }
+    if (cb === 200) {
       res.status(200).send();
     }
   });

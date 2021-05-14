@@ -260,6 +260,9 @@ const getUserEvent = (userID, cb) => {
       log.error(`query failed - getUserEvent, sql: ${sql}, ${err}`);
       console.log(err);
       cb(400);
+    }
+    if (rows.length === 0) {
+      cb(204);
     } else {
       cb(rows[0]);
     }
@@ -267,6 +270,7 @@ const getUserEvent = (userID, cb) => {
 };
 
 // Delete a users event
+// TODO - Add logging
 const deleteUserEvent = (req, userID, cb) => {
   let eventID = req.body.event_ID;
   console.log(eventID);
@@ -297,6 +301,7 @@ const deleteUserEvent = (req, userID, cb) => {
 };
 
 // Add friend
+// TODO - Add logging
 const addFriend = (fID, userID, cb) => {
   let values = [userID, fID];
   let sql = "INSERT INTO friends (user1_ID, user2_ID) VALUES (?)";
@@ -311,6 +316,7 @@ const addFriend = (fID, userID, cb) => {
 };
 
 // Check for friend req
+// TODO - Add logging
 const checkForFriend = (userID, cb) => {
   let sql =
     "SELECT fName FROM Users INNER JOIN friends ON Users.users_ID = friends.user1_ID WHERE user2_ID = " +
@@ -331,6 +337,7 @@ const checkForFriend = (userID, cb) => {
 };
 
 // Accept friend request
+// TODO - Add logging
 const acceptFriend = (userID, cb) => {
   let sql = "UPDATE friends SET status = 'accepted' WHERE user2_ID = " + userID;
   pool.query(sql, (err) => {
@@ -344,6 +351,7 @@ const acceptFriend = (userID, cb) => {
 };
 
 // Get friends list
+// TODO - Add logging
 const friendsList = (userID, cb) => {
   let sql =
     "SELECT fName FROM Users INNER JOIN friends ON Users.users_ID = friends.user1_ID WHERE status = 'accepted' AND user2_ID = " +
@@ -359,6 +367,8 @@ const friendsList = (userID, cb) => {
   });
 };
 
+// Need to finish - GET working
+// TODO - Add logging
 const addFriendToEvent = (req, cb) => {
   let values = [req.body.friendID, req.body.eventID];
   let sql = "INSERT into userEvent (users_ID, event_ID) VALUES (?)";
@@ -371,8 +381,10 @@ const addFriendToEvent = (req, cb) => {
   });
 };
 
+// Get all users ****ADMIN
+// TODO - Add logging
 const getAllUsers = (cb) => {
-  let sql = "SELECT users_ID, fName, lName, email FROM Users";
+  let sql = "SELECT users_ID, fName, lName, email, userType FROM Users";
   pool.query(sql, (err, rows) => {
     if (err) {
       cb(400);
@@ -382,8 +394,58 @@ const getAllUsers = (cb) => {
   });
 };
 
+// Delete selected user ****ADMIN
+// TODO - Add logging
+const deleteUser = (delUserID, cb) => {
+  console.log(delUserID, "db-layer");
+  let sql = "DELETE FROM Users WHERE users_ID = " + delUserID;
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+      console.log(err);
+    } else {
+      cb(200);
+    }
+  });
+};
+
+// Get any orphaned events -> events with no users attached
+// TODO - Add logging
+const getEmptyEvents = (cb) => {
+  console.log("emptyEvents - db");
+  let sql = "SELECT * FROM userEvent WHERE users_ID IS NULL";
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+    }
+    if (rows.length === 0) {
+      cb(204);
+    } else {
+      cb(rows);
+    }
+  });
+};
+
+// Promote a user to Admin status -> **** Admin only
+// TODO - Add logging
+const promoteUser = (promoteUserID, cb) => {
+  console.log("promoteUser db");
+  let sql =
+    "UPDATE Users SET userType = 'Admin' WHERE users_ID = " + promoteUserID;
+  pool.query(sql, (err, rows) => {
+    if (err) {
+      cb(400);
+    } else {
+      cb(200);
+    }
+  });
+};
+
 // Exports all func
 module.exports = {
+  promoteUser,
+  getEmptyEvents,
+  deleteUser,
   getAllUsers,
   addFriendToEvent,
   friendsList,
