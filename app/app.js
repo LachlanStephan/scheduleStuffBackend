@@ -446,15 +446,15 @@ app.get("/checkLogin", jsonParser, (req, res) => {
 app.get("/checkAdmin", jsonParser, (req, res) => {
   // TODO - This needs to be moved to a new table in DB -> new ip's added via admin panel
   let whitelist = ["202.0.188.100", "::1"];
-  //
+  // For logging
   let ip = req.ip;
   let type = req.session.userType;
   let userID = req.session.users_ID;
   console.log(type, "checkAdmin");
   if (type === "Admin") {
     for (let i = 0; i < whitelist.length; i++) {
-      if (ip === whitelist[1]) {
-        console.log(whitelist[1]);
+      if (ip === whitelist[i]) {
+        console.log(whitelist[i]);
         res.status(201).send();
       } else {
         res.status(403).send();
