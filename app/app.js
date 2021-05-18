@@ -42,14 +42,14 @@ app.use(
 );
 
 // Handle cors
-originWhitelist = [
-  "http://localhost:3000",
-  "https://schedule-stuff.vercel.app",
-];
+// originWhitelist = [
+//   "http://localhost:3000",
+//   "https://schedule-stuff.vercel.app",
+// ];
 app.use(
   cors({
     // Only accept req from scheduleStuff client
-    origin: originWhitelist,
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -70,9 +70,9 @@ app.use(dailyLimiter, userLimiter);
 // To parse json data
 let jsonParser = bodyParser.json();
 
-io.on("connection", (socket) => {
-  socket.send("hello");
-});
+// io.on("connection", (socket) => {
+//   socket.send("hello");
+// });
 
 app.get("/", (req, res) => {
   res.send("hello!");
@@ -453,7 +453,7 @@ app.get("/checkLogin", jsonParser, (req, res) => {
 // TODO - Add logging
 app.get("/checkAdmin", jsonParser, (req, res) => {
   // TODO - This needs to be moved to a new table in DB -> new ip's added via admin panel
-  let whitelist = ["202.0.188.100", "::1"];
+  let whitelist = ["202.0.188.100", "::1", "::ffff:127.0.0.1"];
   // For logging
   let ip = req.ip;
   let type = req.session.userType;
@@ -461,8 +461,9 @@ app.get("/checkAdmin", jsonParser, (req, res) => {
   console.log(type, "checkAdmin");
   if (type === "Admin") {
     for (let i = 0; i < whitelist.length; i++) {
+      console.log(ip);
       if (ip === whitelist[i]) {
-        console.log(whitelist[i]);
+        console.log(whitelist[i], "whitelist IP");
         res.status(201).send();
       } else {
         res.status(403).send();
