@@ -3,18 +3,12 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: Mar 25, 2021 at 02:33 AM
+-- Generation Time: May 17, 2021 at 10:48 AM
 -- Server version: 5.7.26
 -- PHP Version: 7.4.2
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
 
 --
 -- Database: `scheduleStuff`
@@ -24,8 +18,6 @@ SET time_zone = "+00:00";
 
 --
 -- Table structure for table `Categories`
---
--- Creation: Mar 16, 2021 at 06:29 AM
 --
 
 CREATE TABLE `Categories` (
@@ -41,9 +33,19 @@ CREATE TABLE `Categories` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Schedule`
+-- Table structure for table `friends`
 --
--- Creation: Mar 16, 2021 at 06:40 AM
+
+CREATE TABLE `friends` (
+  `user1_ID` int(11) NOT NULL,
+  `user2_ID` int(11) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `Schedule`
 --
 
 CREATE TABLE `Schedule` (
@@ -63,12 +65,10 @@ CREATE TABLE `Schedule` (
 --
 -- Table structure for table `userEvent`
 --
--- Creation: Mar 18, 2021 at 10:26 AM
---
 
 CREATE TABLE `userEvent` (
   `userEvent_ID` int(10) UNSIGNED NOT NULL,
-  `users_ID` int(11) NOT NULL,
+  `users_ID` int(11) DEFAULT NULL,
   `event_ID` int(11) NOT NULL,
   `sharedFlag` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -77,9 +77,6 @@ CREATE TABLE `userEvent` (
 
 --
 -- Table structure for table `Users`
---
--- Creation: Mar 25, 2021 at 01:04 AM
--- Last update: Mar 25, 2021 at 01:06 AM
 --
 
 CREATE TABLE `Users` (
@@ -94,11 +91,22 @@ CREATE TABLE `Users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
+-- Indexes for dumped tables
+--
+
+--
 -- Indexes for table `Categories`
 --
 ALTER TABLE `Categories`
   ADD PRIMARY KEY (`category_ID`),
   ADD KEY `Fk_eventID` (`eventID`);
+
+--
+-- Indexes for table `friends`
+--
+ALTER TABLE `friends`
+  ADD KEY `user1_FK` (`user1_ID`),
+  ADD KEY `user2_FK` (`user2_ID`);
 
 --
 -- Indexes for table `Schedule`
@@ -121,6 +129,10 @@ ALTER TABLE `Users`
   ADD PRIMARY KEY (`users_ID`);
 
 --
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
 -- AUTO_INCREMENT for table `Categories`
 --
 ALTER TABLE `Categories`
@@ -130,19 +142,23 @@ ALTER TABLE `Categories`
 -- AUTO_INCREMENT for table `Schedule`
 --
 ALTER TABLE `Schedule`
-  MODIFY `event_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `event_ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `userEvent`
 --
 ALTER TABLE `userEvent`
-  MODIFY `userEvent_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `userEvent_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `users_ID` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `users_ID` int(10) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
 
 --
 -- Constraints for table `Categories`
@@ -151,12 +167,15 @@ ALTER TABLE `Categories`
   ADD CONSTRAINT `Fk_eventID` FOREIGN KEY (`eventID`) REFERENCES `Schedule` (`event_ID`);
 
 --
+-- Constraints for table `friends`
+--
+ALTER TABLE `friends`
+  ADD CONSTRAINT `user1_FK` FOREIGN KEY (`user1_ID`) REFERENCES `Users` (`users_ID`),
+  ADD CONSTRAINT `user2_FK` FOREIGN KEY (`user2_ID`) REFERENCES `Users` (`users_ID`);
+
+--
 -- Constraints for table `userEvent`
 --
 ALTER TABLE `userEvent`
   ADD CONSTRAINT `eventID` FOREIGN KEY (`event_ID`) REFERENCES `Schedule` (`event_ID`),
   ADD CONSTRAINT `usersID` FOREIGN KEY (`users_ID`) REFERENCES `Users` (`users_ID`);
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

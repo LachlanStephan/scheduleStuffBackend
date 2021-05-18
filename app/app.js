@@ -484,6 +484,7 @@ app.get("/getAllUsers", jsonParser, (req, res) => {
 });
 
 // Delete users ****ADMIN
+// TODO Logging and validation
 app.post("/deleteUser", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
@@ -499,6 +500,7 @@ app.post("/deleteUser", jsonParser, (req, res) => {
   });
 });
 
+// TODO add logging
 app.get("/emptyEvents", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
@@ -517,6 +519,7 @@ app.get("/emptyEvents", jsonParser, (req, res) => {
   });
 });
 
+// TODO Logging anf validation
 app.patch("/promoteUser", jsonParser, (req, res) => {
   let ip = req.ip;
   let type = req.session.userType;
