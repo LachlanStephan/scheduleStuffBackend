@@ -42,10 +42,12 @@ app.use(
 );
 
 // Handle cors
+let devOrigin = "http://localhost:3000";
+let prodOrigin = "https://schedule-stuff.vercel.app";
 app.use(
   cors({
     // Only accept req from scheduleStuff client
-    origin: "http://localhost:3000",
+    origin: prodOrigin || devOrigin,
     credentials: true,
   })
 );
@@ -72,7 +74,7 @@ io.on("connection", (socket) => {
 
 app.get("/", (req, res) => {
   res.send("hello!");
-})
+});
 
 // Retrieve schedule for user
 app.get("/schedule/:curDate", (req, res) => {
