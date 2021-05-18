@@ -1,6 +1,6 @@
 const server = require("./app/app");
-const port = 5000;
+const devPort = 5000;
 // Start server on this port
-server.listen(port, () => {
+server.listen(process.env.PORT || devPort, () => {
   console.log(`listening at ${port} `);
 });
