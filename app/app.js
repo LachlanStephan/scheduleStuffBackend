@@ -70,6 +70,10 @@ io.on("connection", (socket) => {
   socket.send("hello");
 });
 
+app.get("/", (req, res) => {
+  res.send("hello!");
+})
+
 // Retrieve schedule for user
 app.get("/schedule/:curDate", (req, res) => {
   // Log the route has been accessed
