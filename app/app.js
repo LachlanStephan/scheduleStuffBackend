@@ -11,12 +11,12 @@ const log = require("../logger/logger");
 const { json } = require("express");
 const server = require("http").createServer(app);
 
-const io = require("socket.io")(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    credentials: true,
-  },
-});
+// const io = require("socket.io")(server, {
+//   cors: {
+//     origin: "http://localhost:3000",
+//     credentials: true,
+//   },
+// });
 
 //////////////////////////////////////////
 // Notes to self
@@ -42,12 +42,14 @@ app.use(
 );
 
 // Handle cors
-let devOrigin = "http://localhost:3000";
-let prodOrigin = "https://schedule-stuff.vercel.app";
+originWhitelist = [
+  "http://localhost:3000",
+  "https://schedule-stuff.vercel.app",
+];
 app.use(
   cors({
     // Only accept req from scheduleStuff client
-    origin: prodOrigin || devOrigin,
+    origin: originWhitelist,
     credentials: true,
   })
 );
