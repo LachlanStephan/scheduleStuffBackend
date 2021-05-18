@@ -10,8 +10,8 @@ const valaddSchedule = () => {
     body("endDate").isDate().not().isEmpty(),
     body("startTime").not().isEmpty(),
     body("endTime").not().isEmpty(),
-    body("eventTitle").not().isEmpty().isLength({ min: 3, max: 50 }),
-    body("eventDesc").not().isEmpty().isLength({ min: 5, max: 255 }),
+    body("eventTitle").not().isEmpty().isLength({ min: 2, max: 50 }),
+    body("eventDesc").not().isEmpty().isLength({ min: 2, max: 255 }),
   ];
 };
 
@@ -42,7 +42,7 @@ const valLog = () => {
 // Validate updating user name
 ////////////////////////////////////////////////////////////
 const valUpdateName = () => {
-  return [body("fName").notEmpty().isLength({ min: 2, max: 20 })];
+  return [body("newName").notEmpty().isLength({ min: 2, max: 20 })];
 };
 
 ////////////////////////////////////////////////////////////
