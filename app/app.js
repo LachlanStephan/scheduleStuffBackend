@@ -439,7 +439,7 @@ app.get("/checkLogin", jsonParser, (req, res) => {
   let userID = req.session.users_ID;
   console.log(userID, "checkLogin route");
   if (!userID) {
-    res.status(403).send();
+    res.status(204).send();
   } else {
     res.status(200).send();
   }
