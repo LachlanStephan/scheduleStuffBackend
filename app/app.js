@@ -42,14 +42,14 @@ app.use(
 );
 
 // Handle cors
-// originWhitelist = [
-//   "http://localhost:3000",
-//   "https://schedule-stuff.vercel.app",
-// ];
+originWhitelist = [
+  "http://localhost:3000",
+  "https://schedule-stuff.vercel.app",
+];
 app.use(
   cors({
     // Only accept req from scheduleStuff client
-    origin: "http://localhost:3000",
+    origin: originWhitelist,
     credentials: true,
   })
 );
