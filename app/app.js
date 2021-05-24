@@ -51,6 +51,12 @@ app.use(
     // Only accept req from scheduleStuff client
     origin: originWhitelist,
     credentials: true,
+    allowedHeaders: [
+      "Origin",
+      "Content-Type",
+      "Authorization",
+      "x-requested-with",
+    ],
   })
 );
 
