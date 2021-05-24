@@ -461,8 +461,8 @@ app.get("/checkAdmin", jsonParser, (req, res) => {
     for (let i = 0; i < whitelist.length; i++) {
       console.log(ip);
       if (ip === whitelist[i]) {
-        res.status(201).send();
         console.log(whitelist[i], "whitelist IP");
+        res.status(201).send();
       } else {
         res.status(403).send();
       }
