@@ -372,7 +372,7 @@ app.get("/checkFriend", jsonParser, (req, res) => {
   // call db func
   dbFunc.checkForFriend(userID, (rows) => {
     if (rows === 400) {
-      res.status(400).send();
+      res.status(204).send();
     }
     if (rows === rows) {
       res.status(200).send(rows);
@@ -461,8 +461,8 @@ app.get("/checkAdmin", jsonParser, (req, res) => {
     for (let i = 0; i < whitelist.length; i++) {
       console.log(ip);
       if (ip === whitelist[i]) {
-        console.log(whitelist[i], "whitelist IP");
         res.status(201).send();
+        console.log(whitelist[i], "whitelist IP");
       } else {
         res.status(403).send();
       }
