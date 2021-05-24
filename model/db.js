@@ -328,7 +328,7 @@ const checkForFriend = (userID, cb) => {
       console.log(err);
     }
     if (rows.length === 0) {
-      cb(400);
+      cb(204);
     } else {
       cb(rows[0]);
       console.log(rows, "checkforfriendDBquery");
