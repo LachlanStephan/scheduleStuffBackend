@@ -24,9 +24,10 @@ const server = require("http").createServer(app);
 
 // To set sessions
 app.use(cookieParser());
-// app.set("trust proxy", 1);
+app.enable("trust proxy", true);
 app.use(
   session({
+    proxy: true,
     name: "scheduleStuffCookie",
     secret: "keyboard cat",
     resave: false,
